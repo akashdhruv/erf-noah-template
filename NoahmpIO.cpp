@@ -1,41 +1,40 @@
 #include <NoahmpIO.H>
 #include <NoahArray.H>
 
-void NoahmpIOVarInitDefault(NoahmpIO_type* noahmpio) {
+extern "C" {
+    void NoahmpIOScalarInitDefault_fi(NoahmpIO_type_fi* noahmpio);
+    void NoahmpIOVarInitDefault_fi(NoahmpIO_type_fi* noahmpio);
+    void NoahmpInitMain_fi(NoahmpIO_type_fi* noahmpio);
+    void NoahmpIOTypeVectInit_fi(int* NBlocks);
+}
 
-      NoahmpIO_type_fi* fptr = &noahmpio->fptr;
-      NoahmpIOVarInitDefault_fi(fptr);
+void NoahmpIO_type::ScalarInitDefault() {
+     NoahmpIOScalarInitDefault_fi(&fptr);
+};
 
-      noahmpio->XLAT = NoahArray2D<double>(fptr->XLAT, 
-                                          {noahmpio->xstart, noahmpio->ystart}, 
-                                          {noahmpio->xend, noahmpio->yend});
+void NoahmpIO_type::InitMain() {
+     NoahmpInitMain_fi(&fptr);
+};
 
-      noahmpio->WSLAKEXY = NoahArray2D<double>(fptr->WSLAKEXY, 
-                                              {noahmpio->xstart, noahmpio->ystart}, 
-                                              {noahmpio->xend, noahmpio->yend});
+void NoahmpIO_type::VarInitDefault() {
 
-      noahmpio->T_PHY = NoahArray3D<double>(fptr->T_PHY, 
-                                           {noahmpio->xstart, noahmpio->kds, noahmpio->ystart}, 
-                                           {noahmpio->xend, noahmpio->kde, noahmpio->yend});
+      NoahmpIOVarInitDefault_fi(&fptr);
 
-      noahmpio->U_PHY = NoahArray3D<double>(fptr->U_PHY, 
-                                           {noahmpio->xstart, noahmpio->kds, noahmpio->ystart}, 
-                                           {noahmpio->xend, noahmpio->kde, noahmpio->yend});
+      XLAT     = NoahArray2D<double>(fptr.XLAT,     {xstart,ystart}, {xend,yend});
+      WSLAKEXY = NoahArray2D<double>(fptr.WSLAKEXY, {xstart,ystart}, {xend,yend});
 
-      noahmpio->V_PHY = NoahArray3D<double>(fptr->V_PHY, 
-                                           {noahmpio->xstart, noahmpio->kds, noahmpio->ystart}, 
-                                           {noahmpio->xend, noahmpio->kde, noahmpio->yend});
+      T_PHY   = NoahArray3D<double>(fptr.T_PHY,   {xstart,kds,ystart}, {xend,kde,yend});
+      U_PHY   = NoahArray3D<double>(fptr.U_PHY,   {xstart,kds,ystart}, {xend,kde,yend});
+      V_PHY   = NoahArray3D<double>(fptr.V_PHY,   {xstart,kds,ystart}, {xend,kde,yend});
+      QV_CURR = NoahArray3D<double>(fptr.QV_CURR, {xstart,kds,ystart}, {xend,kde,yend});
 
-      noahmpio->QV_CURR = NoahArray3D<double>(fptr->QV_CURR, 
-                                             {noahmpio->xstart, noahmpio->kds, noahmpio->ystart}, 
-                                             {noahmpio->xend, noahmpio->kde, noahmpio->yend});
+      SHBXY = NoahArray2D<double>(fptr.SHBXY, {xstart,ystart}, {xend,yend});
+      EVBXY = NoahArray2D<double>(fptr.EVBXY, {xstart,ystart}, {xend,yend});
 
-      noahmpio->SHBXY = NoahArray2D<double>(fptr->SHBXY, 
-                                            {noahmpio->xstart, noahmpio->ystart}, 
-                                            {noahmpio->xend, noahmpio->yend});
+};
 
-      noahmpio->EVBXY = NoahArray2D<double>(fptr->EVBXY, 
-                                            {noahmpio->xstart, noahmpio->ystart}, 
-                                            {noahmpio->xend, noahmpio->yend});
-
+void NoahmpIO_vector::resize(size_t size) {
+     std::vector<NoahmpIO_type>::resize(size);
+     int _size = size;
+     NoahmpIOTypeVectInit_fi(&_size);
 };
