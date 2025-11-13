@@ -111,6 +111,15 @@ contains
     NoahmpIO_cptr%EVBXY = C_LOC(NoahmpIO(bid)%EVBXY)
   end subroutine NoahmpIOVarInitDefault_fi
 
+  subroutine NoahmpInitMain_fi(NoahmpIO_cptr) bind(C, name="NoahmpInitMain_fi")
+    use  iso_c_binding, only : C_INT
+    implicit none 
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
+    integer(C_INT), pointer :: level,bid
+    call C_F_POINTER(NoahmpIO_cptr%BLKID, bid)
+    call NoahmpInitMain(NoahmpIO(bid))
+  end subroutine NoahmpInitMain_fi
+
   subroutine NoahmpIOTypeVectInit_fi(NBlocks) bind(C, name="NoahmpIOTypeVectInit_fi")
     use iso_c_binding, only : C_INT
     implicit none

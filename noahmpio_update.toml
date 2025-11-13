@@ -42,6 +42,12 @@ such as `U_PHY`, `V_PHY`, and `QV_CURR`.
 
    - On the C++ side, these are wrapped into `NoahArray3D` or `NoahArray2D` objects respectively.
 
+-  Member functions of NoahmpIO_type define in NoahmpIO.H have their implementations in NoahmpIO.cpp
+   where the call their Fortran interface functions with the suffix `_fi`. The Fortran interface
+   functions are defined in NoahmpIO_fi.F90 and call the actual Fortran interface function. See the
+   implementation of `NoahmpInitMain`, `NoahmpInitMain_fi`, `NoahmpIO_type::InitMain`. If update
+   request asks for creating function mapping, extend the logic.
+
 2. Task Details
 
 Update the following files to include and correctly link new variables
@@ -57,6 +63,8 @@ File: NoahmpIO.H
 
 -  Ensure constructor and initialization ordering are consistent with the existing pattern.
 
+-  Extend member function if requested similar to the logic of `InitMain`.
+
 File: NoahmpIO.cpp
 
 -  In `NoahmpIO_type::VarInitDefault()`, after calling `NoahmpIOVarInitDefault_fi(&fptr);`,
@@ -69,6 +77,8 @@ File: NoahmpIO.cpp
 
 -  Maintain the same comment and style as existing array initializations.
 
+-  Follow implemenetation of `InitMain` call `NoahmpInitMain_fi` to extend other member functions.
+
 File: NoahmpIO_fi.F90
 
 -  Ensure type NoahmpIO_type_fi includes type(C_PTR) :: T_PHY, TSK in the correct
@@ -80,6 +90,8 @@ File: NoahmpIO_fi.F90
    NoahmpIO_cptr%T_PHY = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%T_PHY)
    NoahmpIO_cptr%TSK   = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%TSK)
    ```
+
+-  `NoahmpInitMain_fi` calls `NoahmpInitMain` follow the logic to extend other requested functions.
 
 File: NoahmpIOVarType.F90
 
@@ -109,6 +121,6 @@ contents of the file, do not edit it.
 
 4. Actual Task
 
-Create bindings for the requsted variables
+Create bindings for the requsted variables or member functions
 
 '''
