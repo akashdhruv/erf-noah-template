@@ -30,20 +30,20 @@ such as `U_PHY`, `V_PHY`, and `QV_CURR`.
 
    ```
    if (.not. allocated(NoahmpIO%T_PHY)) allocate(NoahmpIO%T_PHY(XSTART:XEND,KDS:KDE,YSTART:YEND))
-   if (.not. allocated(NoahmpIO%TSK)) allocate(NoahmpIO%TSK(XSTART:XEND,YSTART:YEND))
+   if (.not. allocated(NoahmpIO%SHBXY)) allocate(NoahmpIO%SHBXY(XSTART:XEND,YSTART:YEND))
    ```
 
    - The Fortran interface then binds C pointers using:
 
    ```
    NoahmpIO_cptr%T_PHY = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%T_PHY)
-   NoahmpIO_cptr%TSK   = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%TSK)
+   NoahmpIO_cptr%SHBXY   = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%SHBXY)
    ```
 
    - On the C++ side, these are wrapped into `NoahArray3D` or `NoahArray2D` objects respectively.
 
--  Member functions of NoahmpIO_type define in NoahmpIO.H have their implementations in NoahmpIO.cpp
-   where the call their Fortran interface functions with the suffix `_fi`. The Fortran interface
+-  Member functions of NoahmpIO_type defined in NoahmpIO.H have their implementations in NoahmpIO.cpp
+   where they call their Fortran interface functions with the suffix `_fi`. The Fortran interface
    functions are defined in NoahmpIO_fi.F90 and call the actual Fortran interface function. See the
    implementation of `NoahmpInitMain`, `NoahmpInitMain_fi`, `NoahmpIO_type::InitMain`. If update
    request asks for creating function mapping, extend the logic.
@@ -51,14 +51,14 @@ such as `U_PHY`, `V_PHY`, and `QV_CURR`.
 2. Task Details
 
 Update the following files to include and correctly link new variables
-`T_PHY` and `TSK` between the C++ and Fortran layers.
+`T_PHY` and `SHBXY` between the C++ and Fortran layers.
 
 File: NoahmpIO.H
 
--  Add pointer members `double* T_PHY = nullptr;` and `double* TSK = nullptr;`
+-  Add pointer members `double* T_PHY = nullptr;` and `double* SHBXY = nullptr;`
    in `struct NoahmpIO_type_fi` immediately after similar fields like `U_PHY` and `V_PHY`.
 
--  Add corresponding `NoahArray3D<double> T_PHY;` and `NoahArray2D<double> TSK;`
+-  Add corresponding `NoahArray3D<double> T_PHY;` and `NoahArray2D<double> SHBXY;`
    members to the `class NoahmpIO_type`.
 
 -  Ensure constructor and initialization ordering are consistent with the existing pattern.
@@ -68,27 +68,27 @@ File: NoahmpIO.H
 File: NoahmpIO.cpp
 
 -  In `NoahmpIO_type::VarInitDefault()`, after calling `NoahmpIOVarInitDefault_fi(&fptr);`,
-   add initialization for `T_PHY` and `TSK` as:
+   add initialization for `T_PHY` and `SHBXY` as:
 
    ```
    T_PHY = NoahArray3D<double>(fptr.T_PHY, {xstart, kds, ystart}, {xend, kde, yend});
-   TSK   = NoahArray2D<double>(fptr.TSK, {xstart, ystart}, {xend, yend});
+   SHBXY   = NoahArray2D<double>(fptr.SHBXY, {xstart, ystart}, {xend, yend});
    ```
 
 -  Maintain the same comment and style as existing array initializations.
 
--  Follow implemenetation of `InitMain` call `NoahmpInitMain_fi` to extend other member functions.
+-  Follow implementation of `InitMain` call `NoahmpInitMain_fi` to extend other member functions.
 
 File: NoahmpIO_fi.F90
 
--  Ensure type NoahmpIO_type_fi includes type(C_PTR) :: T_PHY, TSK in the correct
+-  Ensure type NoahmpIO_type_fi includes type(C_PTR) :: T_PHY, SHBXY in the correct
    location (matching the order in NoahmpIO_type_fi from C++).
 
 -  Within subroutine NoahmpIOVarInitDefault_fi, after C_LOC calls for similar arrays, include:
 
    ```
    NoahmpIO_cptr%T_PHY = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%T_PHY)
-   NoahmpIO_cptr%TSK   = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%TSK)
+   NoahmpIO_cptr%SHBXY   = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%SHBXY)
    ```
 
 -  `NoahmpInitMain_fi` calls `NoahmpInitMain` follow the logic to extend other requested functions.
@@ -98,14 +98,14 @@ File: NoahmpIOVarType.F90
 -  Update the variable declarations in NoahmpIO_type from:
 
    ```
-   real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TSK
+   real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SHBXY
    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  T_PHY
    ```
 
    to:
 
    ```
-   real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  TSK
+   real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  SHBXY
    real(kind=C_DOUBLE),    allocatable, dimension(:,:,:)  ::  T_PHY
    ```
 
@@ -121,6 +121,6 @@ contents of the file, do not edit it.
 
 4. Actual Task
 
-Create bindings for the requsted variables or member functions
+Create bindings for the requested variables or member functions
 
 '''
